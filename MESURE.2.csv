@@ -1,0 +1,38 @@
+S.NO,COLUMN_NAME ,MESURE,,,
+1,CUSTOMER COLOR,IF([CUSTOMERS] > [PY CUSTOMERS],,,
+2,QTY COLOR,"IF([TOTAL QTY] > [PY QTY], ""#85BD5F"", ""#A83F22"")",,,
+3,SALES COLOR,"IF([TOTAL SALES] > [PY SALES], ""#85BD5F"", ""#A83F22"")",,,
+4,UNIT PRICE COLOR,"IF([AVG UNIT PRICE] > [PY AVG PRICE], ""#85BD5F"", ""#A83F22"")",,,
+5,AVG UNIT PRICE,AVERAGE(fact_table[unit_price]),,,
+6,CUSTOMERS,DISTINCTCOUNT(fact_table[coustomer_key]),,,
+7,TOTAL QTY,SUM(fact_table[quantity]),,,
+8,TOTAL SALES,sum(fact_table[total_price]),,,
+9,PY AVG PRICE,"CALCULATE([AVG UNIT PRICE],SAMEPERIODLASTYEAR(time_dim[date_key]),REMOVEFILTERS())",,,
+10,PY CUSTOMERS,"CALCULATE([CUSTOMERS],SAMEPERIODLASTYEAR(time_dim[date_key]),REMOVEFILTERS())",,,
+11,PY QTY,"CALCULATE([TOTAL QTY],SAMEPERIODLASTYEAR(time_dim[date_key]),REMOVEFILTERS())",,,
+12,PY SALES,"CALCULATE([TOTAL SALES],SAMEPERIODLASTYEAR(time_dim[date_key]),REMOVEFILTERS())",,,
+13,% YOY AVG PRICE,"VAR a  = DIVIDE([AVG UNIT PRICE],[PY AVG PRICE]) -1 
+VAR  label = FORMAT(a,""#0.0%"")
+RETURN label & IF(a>0, ""??"",""??"")",,,
+14,% YOY CUSTOMER,"VAR a  = DIVIDE([CUSTOMERS],[PY CUSTOMERS]) -1 
+VAR  label = FORMAT(a,""#0.0%"")
+RETURN label & IF(a>0, ""??"",""??"")",,,
+15,% YOY QTY,"VAR a  = DIVIDE([TOTAL QTY],[PY QTY]) -1 
+VAR  label = FORMAT(a,""#0.0%"")
+RETURN label & IF(a>0, ""??"",""??"")",,,
+16,% YOY SALES,"VAR a  = DIVIDE([TOTAL SALES],[PY SALES]) -1 
+VAR  label = FORMAT(a,""#0.0%"")
+RETURN label & IF(a>0, ""??"",""??"")",,,
+17,RETURNING CUSTOMERS COUNT,"VAR tbl = ADDCOLUMNS(
+    SUMMARIZE(fact_table,customer_dim[coustomer_key]),""order_count"",CALCULATE(DISTINCTCOUNT(fact_table[payment_key])))
+    
+    RETURN COUNTROWS(FILTER(tbl,[order_count] > 1))",,,
+18,RETURNING CUSTOMERS %,"DIVIDE([RETURNING CUSTOMERS COUNT],[ACTIVE CUSTOMERS],0)",,,
+19,MONTHLY NEW CUSTOMERS,"VAR CurrentMonth = SELECTEDVALUE(time_dim[month_year])
+RETURN CALCULATE(
+    DISTINCTCOUNT(customer_dim[coustomer_key]),
+    FILTER(ALL(customer_dim),
+    FORMAT(customer_dim[first_purchase_date],""yyyyMM"") = CALCULATE(SELECTEDVALUE(time_dim[month_year]),ALLSELECTED(time_dim))))",,,
+20,AVG PURCHASE FREQUENCY,"DIVIDE([TOTAL ORDERS],[ACTIVE CUSTOMERS],0)",,,
+21,ACTIVE CUSTOMERS,DISTINCTCOUNT(customer_dim[coustomer_key]),,,
+22,TOTAL ORDERS,DISTINCTCOUNT(fact_table[payment_key]),,,
